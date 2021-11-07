@@ -41,6 +41,16 @@ await connection.sendCommand("ProtoOAApplicationAuthReq", {
 });
 ```
 
+## How to authenticate a trading account
+You can get the access token to use your account from [Open API Applications](https://connect.spotware.com/apps).
+First, you have to authenticate the application, then you can authenticate your trading accounts as follows.
+```javascript
+await connection.sendCommand("ProtoOAAccountAuthReq", {
+    accessToken: "foo",
+    ctidTraderAccountId: "bar",
+});
+```
+
 ### How to keep connection alive
 You can send a heartbeat message every 25 seconds to keep the connection alive.
 ```javascript
