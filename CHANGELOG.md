@@ -1,3 +1,7 @@
+1.4.1 - 20-11-2021
+===================
+* Encode response payload to true object.
+
 1.4.0 - 20-11-2021
 ===================
 * Convert all long values to number.

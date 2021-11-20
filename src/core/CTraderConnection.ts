@@ -8,7 +8,6 @@ import { CTraderSocket } from "#sockets/CTraderSocket";
 import { GenericObject } from "#utilities/GenericObject";
 import { CTraderProtobufReader } from "#protobuf/CTraderProtobufReader";
 import { CTraderConnectionParameters } from "#CTraderConnectionParameters";
-import { CTraderLayerUtilities } from "#utilities/CTraderLayerUtilities";
 
 export class CTraderConnection extends EventEmitter {
     readonly #commandMap: CTraderCommandMap;
@@ -109,17 +108,18 @@ export class CTraderConnection extends EventEmitter {
         const payload = data.payload;
         const clientMsgId = data.clientMsgId;
         const sentCommand = this.#commandMap.extractById(clientMsgId);
+        const normalizedPayload = JSON.parse(payload.encodeJSON());
 
         if (sentCommand) {
             if (typeof payload.errorCode === "string" || typeof payload.errorCode === "number") {
-                sentCommand.reject(CTraderLayerUtilities.convertLongToNumber(payload));
+                sentCommand.reject(normalizedPayload);
             }
             else {
-                sentCommand.resolve(CTraderLayerUtilities.convertLongToNumber(payload));
+                sentCommand.resolve(normalizedPayload);
             }
         }
         else {
-            this.#onPushEvent(payloadType, data.payload);
+            this.#onPushEvent(payloadType, normalizedPayload);
         }
     }
 
@@ -128,7 +128,7 @@ export class CTraderConnection extends EventEmitter {
     }
 
     #onPushEvent (payloadType: number, message: GenericObject): void {
-        this.emit(payloadType.toString(), CTraderLayerUtilities.convertLongToNumber(message));
+        this.emit(payloadType.toString(), message);
     }
 
     public static async getAccessTokenProfile (accessToken: string): Promise<GenericObject> {
