@@ -1,13 +1,14 @@
 import * as EventEmitter from "events";
 import * as path from "path";
 import { v1 } from "uuid";
+import axios from "axios";
 import { CTraderCommandMap } from "#commands/CTraderCommandMap";
 import { CTraderEncoderDecoder } from "#encoder-decoder/CTraderEncoderDecoder";
 import { CTraderSocket } from "#sockets/CTraderSocket";
 import { GenericObject } from "#utilities/GenericObject";
 import { CTraderProtobufReader } from "#protobuf/CTraderProtobufReader";
 import { CTraderConnectionParameters } from "#CTraderConnectionParameters";
-import axios from "axios";
+import { CTraderLayerUtilities } from "#utilities/CTraderLayerUtilities";
 
 export class CTraderConnection extends EventEmitter {
     readonly #commandMap: CTraderCommandMap;
@@ -22,7 +23,6 @@ export class CTraderConnection extends EventEmitter {
 
         this.#commandMap = new CTraderCommandMap({ send: (data: any): void => this.#send(data), });
         this.#encoderDecoder = new CTraderEncoderDecoder();
-        // eslint-disable-next-line max-len
         this.#protobufReader = new CTraderProtobufReader([ {
             file: path.resolve(__dirname, "../../../protobuf/OpenApiCommonMessages.proto"),
         }, {
@@ -77,6 +77,10 @@ export class CTraderConnection extends EventEmitter {
         return connectionPromise;
     }
 
+    public close (): void {
+        this.#socket.disconnect();
+    }
+
     public override on (type: string, listener: (...parameters: any) => any): this {
         const normalizedType: string = Number.isFinite(Number.parseInt(type, 10)) ? type : this.getPayloadTypeByName(type).toString();
 
@@ -108,10 +112,10 @@ export class CTraderConnection extends EventEmitter {
 
         if (sentCommand) {
             if (typeof payload.errorCode === "string" || typeof payload.errorCode === "number") {
-                sentCommand.reject(payload);
+                sentCommand.reject(CTraderLayerUtilities.convertLongToNumber(payload));
             }
             else {
-                sentCommand.resolve(payload);
+                sentCommand.resolve(CTraderLayerUtilities.convertLongToNumber(payload));
             }
         }
         else {
@@ -124,15 +128,18 @@ export class CTraderConnection extends EventEmitter {
     }
 
     #onPushEvent (payloadType: number, message: GenericObject): void {
-        this.emit(payloadType.toString(), message);
+        this.emit(payloadType.toString(), CTraderLayerUtilities.convertLongToNumber(message));
     }
 
     public static async getAccessTokenProfile (accessToken: string): Promise<GenericObject> {
-        return JSON.parse(await axios.get(`https://api.spotware.com/connect/profile?access_token=${accessToken}`));
+        const URI = `https://api.spotware.com/connect/profile?access_token=${accessToken}`;
+
+        return JSON.parse((await axios.get(URI)).data);
     }
 
     public static async getAccessTokenAccounts (accessToken: string): Promise<GenericObject[]> {
-        const parsedResponse: any = JSON.parse(await axios.get(`https://api.spotware.com/connect/tradingaccounts?access_token=${accessToken}`));
+        const URI = `https://api.spotware.com/connect/tradingaccounts?access_token=${accessToken}`;
+        const parsedResponse: any = JSON.parse((await axios.get(URI)).data);
 
         if (!Array.isArray(parsedResponse)) {
             return [];

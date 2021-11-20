@@ -1,3 +1,8 @@
+1.4.0 - 20-11-2021
+===================
+* Convert all long values to number.
+* Fix wrong parsing of token accounts and profile.
+
 1.3.0 - 06-07-2021
 ===================
 * Create internal decoding of payload type.

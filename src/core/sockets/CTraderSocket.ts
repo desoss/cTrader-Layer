@@ -31,6 +31,10 @@ export class CTraderSocket {
         this.#socket = socket;
     }
 
+    public disconnect (): void {
+        this.#socket?.destroy();
+    }
+
     public send (buffer: Buffer): void {
         this.#socket?.write(buffer);
     }
