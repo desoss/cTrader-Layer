@@ -111,6 +111,8 @@ export class CTraderConnection extends EventEmitter {
         const normalizedPayload = JSON.parse(payload.encodeJSON());
 
         if (sentCommand) {
+            normalizedPayload.clientMsgId = clientMsgId;
+
             if (typeof payload.errorCode === "string" || typeof payload.errorCode === "number") {
                 sentCommand.reject(normalizedPayload);
             }
