@@ -1,3 +1,4 @@
+* Update Open API protobuf definitions.
 * Include clientMsgId in command responses.
 
 1.4.1 - 20-11-2021
