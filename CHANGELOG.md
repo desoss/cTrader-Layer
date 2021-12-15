@@ -1,3 +1,5 @@
+* Include clientMsgId in command responses.
+
 1.4.1 - 20-11-2021
 ===================
 * Encode response payload to true object.
