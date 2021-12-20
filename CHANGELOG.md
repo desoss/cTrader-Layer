@@ -1,3 +1,7 @@
+1.6.0 - 20-12-2021
+===================
+* Allow using custom client message id when sending a command.
+
 1.5.0 - 15-12-2021
 ===================
 * Update Open API protobuf definitions.
