@@ -44,17 +44,17 @@ export class CTraderConnection extends EventEmitter {
         return this.#protobufReader.getPayloadTypeByName(name);
     }
 
-    async sendCommand (payloadType: string | number, data?: GenericObject): Promise<GenericObject> {
-        const clientMsgId: string = v1();
+    async sendCommand (payloadType: string | number, data?: GenericObject, messageId?: string): Promise<GenericObject> {
+        const clientMsgId: string = messageId ?? v1();
         const normalizedPayloadType: number = typeof payloadType === "number" ? payloadType : this.getPayloadTypeByName(payloadType);
         const message: any = this.#protobufReader.encode(normalizedPayloadType, data ?? {}, clientMsgId);
 
         return this.#commandMap.create({ clientMsgId, message, });
     }
 
-    async trySendCommand (payloadType: string | number, data?: GenericObject): Promise<GenericObject | undefined> {
+    async trySendCommand (payloadType: string | number, data?: GenericObject, messageId?: string): Promise<GenericObject | undefined> {
         try {
-            return await this.sendCommand(payloadType, data);
+            return await this.sendCommand(payloadType, data, messageId);
         }
         catch {
             return undefined;
@@ -110,9 +110,11 @@ export class CTraderConnection extends EventEmitter {
         const sentCommand = this.#commandMap.extractById(clientMsgId);
         const normalizedPayload = JSON.parse(payload.encodeJSON());
 
-        if (sentCommand) {
+        if (clientMsgId) {
             normalizedPayload.clientMsgId = clientMsgId;
+        }
 
+        if (sentCommand) {
             if (typeof payload.errorCode === "string" || typeof payload.errorCode === "number") {
                 sentCommand.reject(normalizedPayload);
             }
