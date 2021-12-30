@@ -131,6 +131,16 @@ export class CTraderProtobufReader {
     }
 
     public getPayloadTypeByName (name: string): number {
-        return this.#names[name].payloadType;
+        return this.#names[name]?.payloadType ?? -1;
+    }
+
+    public getPayloadNameByType (type: number): string {
+        for (const name of Object.keys(this.#names)) {
+            if (this.#names[name].payloadType === type) {
+                return name;
+            }
+        }
+
+        return "";
     }
 }
