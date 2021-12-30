@@ -8,6 +8,7 @@ import { CTraderSocket } from "#sockets/CTraderSocket";
 import { GenericObject } from "#utilities/GenericObject";
 import { CTraderProtobufReader } from "#protobuf/CTraderProtobufReader";
 import { CTraderConnectionParameters } from "#CTraderConnectionParameters";
+import { CTraderCommand } from "#commands/CTraderCommand";
 
 export class CTraderConnection extends EventEmitter {
     readonly #commandMap: CTraderCommandMap;
@@ -44,17 +45,38 @@ export class CTraderConnection extends EventEmitter {
         return this.#protobufReader.getPayloadTypeByName(name);
     }
 
-    async sendCommand (payloadType: string | number, data?: GenericObject, messageId?: string): Promise<GenericObject> {
-        const clientMsgId: string = messageId ?? v1();
-        const normalizedPayloadType: number = typeof payloadType === "number" ? payloadType : this.getPayloadTypeByName(payloadType);
-        const message: any = this.#protobufReader.encode(normalizedPayloadType, data ?? {}, clientMsgId);
-
-        return this.#commandMap.create({ clientMsgId, message, });
+    public getPayloadNameByType (type: number): string {
+        return this.#protobufReader.getPayloadNameByType(type);
     }
 
-    async trySendCommand (payloadType: string | number, data?: GenericObject, messageId?: string): Promise<GenericObject | undefined> {
+    async sendCommand (payloadName: string, data?: GenericObject, messageId?: string): Promise<GenericObject> {
+        const clientMsgId: string = messageId ?? v1();
+        const payloadType: number = this.getPayloadTypeByName(payloadName);
+        const message: any = this.#protobufReader.encode(payloadType, data ?? {}, clientMsgId);
+        const responsePromise: Promise<GenericObject> = this.#commandMap.create({ clientMsgId, message, });
+
+        if (payloadName.substr(-5).toUpperCase() === "EVENT") {
+            const sentCommand: CTraderCommand = this.#commandMap.extractById(clientMsgId) as CTraderCommand;
+
+            sentCommand.resolve({});
+        }
+
+        if (payloadName.substr(-3).toUpperCase() === "REQ") {
+            const responsePayloadType: number = this.getPayloadTypeByName(`${payloadName.substr(0, payloadName.length - 3)}Res`);
+
+            if (responsePayloadType === -1) {
+                const sentCommand: CTraderCommand = this.#commandMap.extractById(clientMsgId) as CTraderCommand;
+
+                sentCommand.resolve({});
+            }
+        }
+
+        return responsePromise;
+    }
+
+    async trySendCommand (payloadName: string, data?: GenericObject, messageId?: string): Promise<GenericObject | undefined> {
         try {
-            return await this.sendCommand(payloadType, data, messageId);
+            return await this.sendCommand(payloadName, data, messageId);
         }
         catch {
             return undefined;
@@ -80,10 +102,10 @@ export class CTraderConnection extends EventEmitter {
         this.#socket.disconnect();
     }
 
-    public override on (type: string, listener: (...parameters: any) => any): this {
-        const normalizedType: string = Number.isFinite(Number.parseInt(type, 10)) ? type : this.getPayloadTypeByName(type).toString();
+    public override on (payloadName: string, listener: (...parameters: any) => any): this {
+        const payloadType: string = this.getPayloadTypeByName(payloadName).toString();
 
-        return super.on(normalizedType, listener);
+        return super.on(payloadType, listener);
     }
 
     #send (data: GenericObject): void {
@@ -109,12 +131,16 @@ export class CTraderConnection extends EventEmitter {
         const clientMsgId = data.clientMsgId;
         const sentCommand = this.#commandMap.extractById(clientMsgId);
         const normalizedPayload = JSON.parse(payload.encodeJSON());
+        const payloadName: string = this.getPayloadNameByType(payloadType);
 
         if (clientMsgId) {
             normalizedPayload.clientMsgId = clientMsgId;
         }
 
-        if (sentCommand) {
+        if (payloadName.substr(-5).toUpperCase() === "EVENT") {
+            this.#onPushEvent(payloadType, normalizedPayload);
+        }
+        else if (payloadName.substr(-3).toUpperCase() === "RES" && sentCommand) {
             if (typeof payload.errorCode === "string" || typeof payload.errorCode === "number") {
                 sentCommand.reject(normalizedPayload);
             }
@@ -123,7 +149,7 @@ export class CTraderConnection extends EventEmitter {
             }
         }
         else {
-            this.#onPushEvent(payloadType, normalizedPayload);
+            console.log(`Unknown payload type ${payloadType}`);
         }
     }
 
