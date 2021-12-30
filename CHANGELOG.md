@@ -1,3 +1,7 @@
+2.0.0 - 30-12-2021
+===================
+* Accept only payload name when sending commands or listening events. Automatically resolve commands that have no response payload defined.
+
 1.6.0 - 20-12-2021
 ===================
 * Allow using custom client message id when sending a command.
