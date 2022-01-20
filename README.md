@@ -1,4 +1,8 @@
 # cTrader Layer
+[![Image](https://img.shields.io/npm/v/@reiryoku/ctrader-layer)](https://www.npmjs.com/package/@reiryoku/ctrader-layer)
+[![Image](https://img.shields.io/npm/l/@reiryoku/ctrader-layer)](LICENSE)
+<br>
+
 A Node.js communication layer for the cTrader [Open API](https://connect.spotware.com).<br>
 This implementation is created and maintained by Reiryoku Technologies and its contributors.
 
