@@ -1,15 +1,20 @@
 import * as tls from "tls";
 import { CTraderSocketParameters } from "#sockets/CTraderSocketParameters";
+import { CTraderLayerUtilities } from "#utilities/CTraderLayerUtilities";
+
+const isBrowser = CTraderLayerUtilities.isBrowser();
 
 export class CTraderSocket {
     readonly #host: string;
     readonly #port: number;
-    #socket?: tls.TLSSocket;
+    #tlsSocket?: tls.TLSSocket;
+    #webSocket?: WebSocket;
 
     public constructor ({ host, port, }: CTraderSocketParameters) {
         this.#host = host;
         this.#port = port;
-        this.#socket = undefined;
+        this.#tlsSocket = undefined;
+        this.#webSocket = undefined;
     }
 
     public get host (): string {
@@ -21,6 +26,19 @@ export class CTraderSocket {
     }
 
     public connect (): void {
+        if (isBrowser) {
+            const socket = new WebSocket(`wss://${this.#host}:${this.#port}`);
+
+            socket.addEventListener("open", this.onOpen);
+            socket.addEventListener("message", this.onData);
+            socket.addEventListener("close", this.onClose);
+            socket.addEventListener("error", this.onError);
+
+            this.#webSocket = socket;
+
+            return;
+        }
+
         // @ts-ignore
         const socket = tls.connect(this.#port, this.#host, this.onOpen);
 
@@ -28,15 +46,17 @@ export class CTraderSocket {
         socket.on("end", this.onClose);
         socket.on("error", this.onError);
 
-        this.#socket = socket;
+        this.#tlsSocket = socket;
     }
 
     public disconnect (): void {
-        this.#socket?.destroy();
+        this.#tlsSocket?.destroy();
+        this.#webSocket?.close();
     }
 
     public send (buffer: Buffer): void {
-        this.#socket?.write(buffer);
+        this.#tlsSocket?.write(buffer);
+        this.#webSocket?.send(buffer);
     }
 
     public onOpen (): void {
