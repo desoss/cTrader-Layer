@@ -2,7 +2,7 @@ import * as tls from "tls";
 import { CTraderSocketParameters } from "#sockets/CTraderSocketParameters";
 import { CTraderLayerUtilities } from "#utilities/CTraderLayerUtilities";
 
-const isBrowser = CTraderLayerUtilities.isBrowser();
+const isBrowser: boolean = CTraderLayerUtilities.isBrowser();
 
 export class CTraderSocket {
     readonly #host: string;
@@ -36,25 +36,16 @@ export class CTraderSocket {
             socket.addEventListener("error", this.onError);
 
             this.#webSocket = socket;
-
-            return;
         }
+        else {
+            // @ts-ignore
+            const socket = tls.connect(this.#port, this.#host, this.onOpen);
 
-        // @ts-ignore
-        const socket = tls.connect(this.#port, this.#host, this.onOpen);
+            socket.on("data", this.onData);
+            socket.on("end", this.onClose);
+            socket.on("error", this.onError);
 
-        socket.on("data", this.onData);
-        socket.on("end", this.onClose);
-        socket.on("error", this.onError);
-
-        this.#tlsSocket = socket;
-
-        if (this.#tlsSocket) {
-            console.log("TLS CONNECTED");
-        }
-
-        if (this.#webSocket) {
-            console.log("WEB SOCKET CONNECTED");
+            this.#tlsSocket = socket;
         }
     }
 
