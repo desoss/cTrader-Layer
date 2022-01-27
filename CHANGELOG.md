@@ -1,3 +1,5 @@
+2.1.0 - 27-01-2022
+===================
 ### Features
 * Add browser support.
 
