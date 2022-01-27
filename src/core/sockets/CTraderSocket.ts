@@ -28,6 +28,7 @@ export class CTraderSocket {
     public connect (): void {
         if (isBrowser) {
             const socket = new WebSocket(`wss://${this.#host}:${this.#port}`);
+            socket.binaryType = "arraybuffer";
 
             socket.addEventListener("open", this.onOpen);
             socket.addEventListener("message", this.onData);
@@ -47,6 +48,14 @@ export class CTraderSocket {
         socket.on("error", this.onError);
 
         this.#tlsSocket = socket;
+
+        if (this.#tlsSocket) {
+            console.log("TLS CONNECTED");
+        }
+
+        if (this.#webSocket) {
+            console.log("WEB SOCKET CONNECTED");
+        }
     }
 
     public disconnect (): void {

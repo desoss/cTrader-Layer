@@ -1,5 +1,8 @@
 import { Buffer } from "buffer";
 import { GenericObject } from "#utilities/GenericObject";
+import { CTraderLayerUtilities } from "#utilities/CTraderLayerUtilities";
+
+const isBrowser: boolean = CTraderLayerUtilities.isBrowser();
 
 export class CTraderEncoderDecoder {
     readonly #sizeLength: number;
@@ -20,6 +23,11 @@ export class CTraderEncoderDecoder {
 
     public encode (data: GenericObject): Buffer {
         const normalizedData = data.toBuffer();
+
+        if (isBrowser) {
+            return normalizedData;
+        }
+
         const sizeLength: number = this.#sizeLength;
         const normalizedDataLength: number = normalizedData.length;
         const size = Buffer.alloc(sizeLength);
@@ -30,6 +38,15 @@ export class CTraderEncoderDecoder {
     }
 
     public decode (buffer: Buffer): void {
+        if (isBrowser) {
+            if (this.#decodeHandler) {
+                // @ts-ignore
+                this.#decodeHandler(buffer.data);
+            }
+
+            return;
+        }
+
         const size: number | undefined = this.#size;
         let usedBuffer: Buffer = buffer;
 
