@@ -1,7 +1,7 @@
 2.1.0 - 27-01-2022
 ===================
 ### Features
-* Add browser support.
+* Add browser support ([#6](https://github.com/Reiryoku-Technologies/cTrader-Layer/pull/6)).
 
 2.0.0 - 30-12-2021
 ===================
