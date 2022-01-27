@@ -1,3 +1,6 @@
+### Features
+* Add browser support.
+
 2.0.0 - 30-12-2021
 ===================
 * Accept only payload name when sending commands or listening events. Automatically resolve commands that have no response payload defined.
