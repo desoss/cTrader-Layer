@@ -4,6 +4,6 @@ export class CTraderLayerUtilities {
     }
 
     public static isBrowser (): boolean {
-        return typeof process === "undefined" || process?.versions?.node === undefined;
+        return typeof process === "undefined" || !process?.versions?.node;
     }
 }
