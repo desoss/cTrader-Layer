@@ -1,3 +1,6 @@
+### Bug fixes
+* Fix process is undefined error on browsers ([#7](https://github.com/Reiryoku-Technologies/cTrader-Layer/pull/7)).
+
 2.1.0 - 27-01-2022
 ===================
 ### Features
