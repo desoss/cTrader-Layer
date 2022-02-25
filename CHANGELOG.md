@@ -3,7 +3,7 @@
 * Update Open API message files ([#8](https://github.com/Reiryoku-Technologies/cTrader-Layer/pull/8)) | https://github.com/spotware/openapi-proto-messages/commit/f35e7d644c115443494cfac649ff06233ff8dce8
 
 ### Bug fixes
-* Fix process is undefined error on browsers ([#7](https://github.com/Reiryoku-Technologies/cTrader-Layer/pull/7)).
+* Fix process is undefined error on browsers ([#7](https://github.com/Reiryoku-Technologies/cTrader-Layer/pull/7))
 
 2.1.0 - 27-01-2022
 ===================
