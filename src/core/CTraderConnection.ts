@@ -1,4 +1,3 @@
-import * as EventEmitter from "events";
 import * as path from "path";
 import { v1 } from "uuid";
 import axios from "axios";
@@ -9,18 +8,20 @@ import { GenericObject } from "#utilities/GenericObject";
 import { CTraderProtobufReader } from "#protobuf/CTraderProtobufReader";
 import { CTraderConnectionParameters } from "#CTraderConnectionParameters";
 import { CTraderCommand } from "#commands/CTraderCommand";
+import { CTraderLayerEmitter } from "#utilities/emitters/CTraderLayerEmitter";
+import { CTraderLayerEventListener } from "#events/CTraderLayerEventListener";
+import { CTraderLayerEvent } from "#events/CTraderLayerEvent";
 
-export class CTraderConnection extends EventEmitter {
+export class CTraderConnection {
     readonly #commandMap: CTraderCommandMap;
     readonly #encoderDecoder: CTraderEncoderDecoder;
     readonly #protobufReader;
     readonly #socket: CTraderSocket;
+    readonly #emitter: CTraderLayerEmitter;
     #resolveConnectionPromise?: (...parameters: any[]) => void;
     #rejectConnectionPromise?: (...parameters: any[]) => void;
 
     public constructor ({ host, port, }: CTraderConnectionParameters) {
-        super();
-
         this.#commandMap = new CTraderCommandMap({ send: (data: any): void => this.#send(data), });
         this.#encoderDecoder = new CTraderEncoderDecoder();
         this.#protobufReader = new CTraderProtobufReader([ {
@@ -29,6 +30,7 @@ export class CTraderConnection extends EventEmitter {
             file: path.resolve(__dirname, "../../../protobuf/OpenApiMessages.proto"),
         }, ]);
         this.#socket = new CTraderSocket({ host, port, });
+        this.#emitter = new CTraderLayerEmitter();
         this.#resolveConnectionPromise = undefined;
         this.#rejectConnectionPromise = undefined;
 
@@ -102,10 +104,20 @@ export class CTraderConnection extends EventEmitter {
         this.#socket.disconnect();
     }
 
-    public override on (payloadName: string, listener: (...parameters: any) => any): this {
+    public on (payloadName: string): Promise<CTraderLayerEvent>
+    public on (payloadName: string, listener: CTraderLayerEventListener): string
+    public on (payloadName: string, listener?: CTraderLayerEventListener): Promise<CTraderLayerEvent> | string {
         const payloadType: string = this.getPayloadTypeByName(payloadName).toString();
 
-        return super.on(payloadType, listener);
+        if (!listener) {
+            return this.#emitter.on(payloadType);
+        }
+
+        return this.#emitter.on(payloadType, listener);
+    }
+
+    public removeEventListener (uuid: string): void {
+        this.#emitter.removeEventListener(uuid);
     }
 
     #send (data: GenericObject): void {
@@ -158,7 +170,7 @@ export class CTraderConnection extends EventEmitter {
     }
 
     #onPushEvent (payloadType: number, message: GenericObject): void {
-        this.emit(payloadType.toString(), message);
+        this.#emitter.notifyListeners(payloadType.toString(), message);
     }
 
     public static async getAccessTokenProfile (accessToken: string): Promise<GenericObject> {
