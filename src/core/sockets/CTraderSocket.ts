@@ -60,18 +60,18 @@ export class CTraderSocket {
     }
 
     public onOpen (): void {
-        // Silence is golden.
+        // Silence is golden
     }
 
     public onData (...parameters: any[]): void {
-        // Silence is golden.
+        // Silence is golden
     }
 
     public onClose (): void {
-        // Silence is golden.
+        // Silence is golden
     }
 
     public onError (): void {
-        // Silence is golden.
+        // Silence is golden
     }
 }
