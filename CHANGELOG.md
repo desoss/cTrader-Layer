@@ -1,3 +1,5 @@
+2.2.0 - 27-02-2022
+===================
 ### Features
 * Create and use custom event emitter ([#8](https://github.com/Reiryoku-Technologies/cTrader-Layer/pull/8))
 * Update Open API message files ([#8](https://github.com/Reiryoku-Technologies/cTrader-Layer/pull/8)) | https://github.com/spotware/openapi-proto-messages/commit/f35e7d644c115443494cfac649ff06233ff8dce8
