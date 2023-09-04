@@ -1,4 +1,5 @@
 import { GenericObject } from "#utilities/GenericObject";
+import * as path from "path";
 
 const protobuf = require("protobufjs");
 
@@ -50,6 +51,7 @@ export class CTraderProtobufReader {
     }
 
     public load (): void {
+        console.info(`Looking for proto file in this directory: ${path.resolve(__dirname, "../../../protobuf").toString()}`);
         this.#params.forEach((param: any) => {
             this.#builder = protobuf.loadProtoFile(param.file, this.#builder);
         });
